@@ -18,6 +18,8 @@ contract DiplomaRegistry {
 
     event StudentSubmittedCC(string ccHash);
     event StudentMarkedIneligible(string ccHash);
+    event StudentAlreadyIneligible(string ccHash);
+    event StudentAlreadyEligible(string ccHash);
     event StudentMarkedEligible(string ccHash);
     event StudentPaidForDiploma(string ccHash);
     event DiplomaIssued(bytes diplomaSig, bytes ccSig);
@@ -48,20 +50,25 @@ contract DiplomaRegistry {
     function markIneligible(string calldata ccHash) external onlyUniversity {
         VerifiedStudent storage student = verifiedStudents[ccHash];
         require(bytes(student.ccHash).length != 0, "Student not found");
-        require(student.isEligible, "Already ineligible");
-
-        student.isEligible = false;
-        emit StudentMarkedIneligible(ccHash);
+        if (!student.isEligible) {
+            student.isEligible = false;
+            emit StudentMarkedIneligible(ccHash);
+        } else {
+            emit StudentAlreadyIneligible(ccHash);
+        }
     }
 
     // Step 2: University marks the student as eligible
     function markEligible(string calldata ccHash) external onlyUniversity {
         VerifiedStudent storage student = verifiedStudents[ccHash];
         require(bytes(student.ccHash).length != 0, "Student not submitted");
-        require(!student.isEligible, "Already eligible");
 
-        student.isEligible = true;
-        emit StudentMarkedEligible(ccHash);
+        if (!student.isEligible) {
+            student.isEligible = true;
+            emit StudentMarkedEligible(ccHash);
+        } else {
+            emit StudentAlreadyEligible(ccHash); 
+        }
     }
 
     // Step 3: Student pays the diploma fee
