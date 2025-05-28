@@ -37,15 +37,22 @@ contract DiplomaRegistry {
 
     // Step 1: Student submits their CC hash
     function submitCC(string calldata ccHash) external {
-        VerifiedStudent storage student = verifiedStudents[ccHash];
-        require(bytes(student.ccHash).length == 0, "CC already submitted");
+    VerifiedStudent storage student = verifiedStudents[ccHash];
 
-        student.ccHash = ccHash;
-        allCCs.push(ccHash);
-        ccIndex[ccHash] = allCCs.length; // Store index + 1 to avoid default 0
+    if (bytes(student.ccHash).length != 0) {
+        if (student.isEligible) {
+            emit StudentAlreadyEligible(ccHash);
+        } else {
+            emit StudentAlreadyIneligible(ccHash);
+        }
+        return;
+    student.ccHash = ccHash;
+    allCCs.push(ccHash);
+    ccIndex[ccHash] = allCCs.length;
 
-        emit StudentSubmittedCC(ccHash);
+    emit StudentSubmittedCC(ccHash);
     }
+
 
     function markIneligible(string calldata ccHash) external onlyUniversity {
         VerifiedStudent storage student = verifiedStudents[ccHash];
@@ -140,5 +147,8 @@ contract DiplomaRegistry {
             students[i] = verifiedStudents[allCCs[i]];
         }
         return students;
+    }
+    function getFee() external view returns (uint256) {
+        return diplomaFee;
     }
 }
