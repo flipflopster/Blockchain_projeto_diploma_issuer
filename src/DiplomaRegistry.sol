@@ -17,7 +17,7 @@ contract DiplomaRegistry {
     mapping(string => uint256) private ccIndex;
 
     event StudentSubmittedCC(string ccHash);
-    event StudentMarkedIneligible(string ccHash);
+    event StudentMarkedIneligible(string ccHash, string reason);
     event StudentAlreadyIneligible(string ccHash);
     event StudentAlreadyEligible(string ccHash);
     event StudentMarkedEligible(string ccHash);
@@ -47,23 +47,24 @@ contract DiplomaRegistry {
         }
         return;
         }
-    student.ccHash = ccHash;
-    allCCs.push(ccHash);
-    ccIndex[ccHash] = allCCs.length;
+        student.ccHash = ccHash;
+        allCCs.push(ccHash);
+        ccIndex[ccHash] = allCCs.length;
 
-    emit StudentSubmittedCC(ccHash);
-        }
-
-    function markIneligible(string calldata ccHash) external onlyUniversity {
-    VerifiedStudent storage student = verifiedStudents[ccHash];
-    require(bytes(student.ccHash).length != 0, "Student not found");
-    if (student.isEligible) {
-        student.isEligible = false;
-        emit StudentMarkedIneligible(ccHash);
-    } else {
-        emit StudentAlreadyIneligible(ccHash);
+        emit StudentSubmittedCC(ccHash);
     }
-}
+
+    function markIneligible(string calldata ccHash, string calldata reason) external onlyUniversity {
+        VerifiedStudent storage student = verifiedStudents[ccHash];
+        require(bytes(student.ccHash).length != 0, "Student not found");
+        
+        if (student.isEligible) {
+            student.isEligible = false;
+            emit StudentMarkedIneligible(ccHash, reason);
+        } else {
+        emit StudentAlreadyIneligible(ccHash);
+        }
+    }
 
     // Step 2: University marks the student as eligible
     function markEligible(string calldata ccHash) external onlyUniversity {
