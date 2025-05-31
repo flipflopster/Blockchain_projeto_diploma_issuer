@@ -18,7 +18,7 @@ contract DiplomaRegistry {
 
     event StudentSubmittedCC(string ccHash);
     event StudentMarkedIneligible(string ccHash, string reason);
-    event StudentAlreadyIneligible(string ccHash);
+    event Recheck(string ccHash);
     event StudentAlreadyEligible(string ccHash);
     event StudentMarkedEligible(string ccHash);
     event StudentPaidForDiploma(string ccHash);
@@ -43,7 +43,7 @@ contract DiplomaRegistry {
         if (student.isEligible) {
             emit StudentAlreadyEligible(ccHash);
         } else {
-            emit StudentAlreadyIneligible(ccHash);
+            emit Recheck(ccHash);
         }
         return;
         }
@@ -54,28 +54,17 @@ contract DiplomaRegistry {
         emit StudentSubmittedCC(ccHash);
     }
 
-    function markIneligible(string calldata ccHash, string calldata reason) external onlyUniversity {
+    function updateEligibility(string calldata ccHash, bool status, string calldata reason) external onlyUniversity {
         VerifiedStudent storage student = verifiedStudents[ccHash];
         require(bytes(student.ccHash).length != 0, "Student not found");
-        
-        if (student.isEligible) {
-            student.isEligible = false;
-            emit StudentMarkedIneligible(ccHash, reason);
-        } else {
-        emit StudentAlreadyIneligible(ccHash);
-        }
-    }
 
-    // Step 2: University marks the student as eligible
-    function markEligible(string calldata ccHash) external onlyUniversity {
-        VerifiedStudent storage student = verifiedStudents[ccHash];
-        require(bytes(student.ccHash).length != 0, "Student not submitted");
-
-        if (!student.isEligible) {
-            student.isEligible = true;
-            emit StudentMarkedEligible(ccHash);
+        if (status) {
+            if (!student.isEligible) {
+                student.isEligible = true;
+                emit StudentMarkedEligible(ccHash);
+            }
         } else {
-            emit StudentAlreadyEligible(ccHash); 
+                emit StudentMarkedIneligible(ccHash, reason);
         }
     }
 
